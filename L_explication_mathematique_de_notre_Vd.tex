@@ -1,0 +1,60 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{graphicx}
+
+\title{\textbf{Analyseur Hybride et Extrapolateur Fractal : \\ Calcul du Volume Sanguin Total Effectif ($V_d$)}}
+\author{Thang Vu Anh Thuong}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Ce document détaille les fondements mathématiques et la méthodologie de l'implémentation algorithmique permettant de calculer le volume sanguin effectif fini ($V_d$). L'approche génère un jumeau numérique vasculaire en combinant l'imagerie médicale déterministe macroscopique et l'extrapolation analytique fractale de la microcirculation (artérioles et capillaires).
+\end{abstract}
+
+\section{Introduction}
+La résolution spatiale des modalités d'imagerie médicale modernes (telles que l'Angioscanner ou l'IRM) est physiquement limitée aux vaisseaux macroscopiques, avec une résolution radiale de l'ordre de $0.5 \, \text{mm}$. Par conséquent, la microcirculation, qui descend jusqu'à environ $8 \, \mu\text{m}$, demeure inobservable directement. 
+Afin de dépasser les approximations empiriques classiques, cette méthode propose de modéliser le spectre des tailles vasculaires de manière continue.
+
+\section{Formulation Mathématique du Volume $V_d$}
+Le volume sanguin fini s'exprime rigoureusement par la somme de la composante macroscopique segmentée et de l'intégrale du réseau vasculaire asymptotique non résolu. L'équation fondamentale du volume total effectif $V_d$ est donnée par :
+\begin{equation}
+    V_d = V_{\text{macro\_scan}} + \int_{r_{\text{cap}}}^{r_{\text{obs}}} C \cdot r^{3-d} \, dr
+\end{equation}
+où les paramètres physiques et topologiques sont définis comme suit :
+\begin{itemize}
+    \item $V_{\text{macro\_scan}}$ : Volume déterministe des vaisseaux scannés et segmentés.
+    \item $r_{\text{cap}}$ : Rayon de coupure physiologique inférieur (rayon capillaire, $r_{\text{cap}} \approx 0.004 \, \text{mm}$).
+    \item $r_{\text{obs}}$ : Résolution radiale limite imposée par le scanner ($r_{\text{obs}} \approx 0.5 \, \text{mm}$).
+    \item $d$ : Dimension fractale locale caractérisant l'arborescence du réseau vasculaire.
+    \item $C$ : Constante de proportionnalité géométrique, intrinsèque à la densité de perfusion locale.
+\end{itemize}
+
+\section{Extraction Topologique et Régression Log-Log}
+Les paramètres $d$ et $C$ sont extraits directement depuis la topologie 3D du patient.
+\subsection{Squelettisation et Analyse Radiale}
+L'algorithme réduit le réseau vasculaire à son graphe central (squelettisation 3D). Une Transformée de Distance Exacte (EDT) évalue avec une haute précision le rayon vasculaire $r(x)$ en chaque point du squelette.
+
+\subsection{Loi de Puissance et Dimension Fractale}
+La distribution des volumes locaux suit une loi d'échelle caractéristique des structures fractales. En échelle logarithmique, cette relation devient linéaire :
+\begin{equation}
+    \log(V(r)) = (3-d)\log(r) + \log(C)
+\end{equation}
+Un ajustement de courbe paramétrique permet d'isoler la pente de cette droite, qui correspond à $(3-d)$, et l'ordonnée à l'origine déterminant la constante $C$. 
+
+\section{Intégration Analytique et Implémentation Numérique}
+L'évaluation du compartiment microvasculaire manquant correspond au calcul de l'intégrale définie sur l'intervalle $[r_{\text{cap}}, r_{\text{obs}}]$. 
+\begin{equation}
+    V_{\text{micro}} = \int_{r_{\text{cap}}}^{r_{\text{obs}}} C \cdot r^{3-d} \, dr = \left[ \frac{C \cdot r^{4-d}}{4-d} \right]_{r_{\text{cap}}}^{r_{\text{obs}}} \quad (\text{pour } d \neq 4)
+\end{equation}
+Cette résolution analytique est implémentée efficacement via les routines de quadrature, garantissant une intégration rapide et précise pour finaliser l'extrapolation de $V_d$.
+
+\end{document}
